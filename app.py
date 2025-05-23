@@ -2,7 +2,6 @@ from flask import Flask, render_template, request, send_file
 import yt_dlp
 import os
 import re
-import shutil
 
 app = Flask(__name__)
 DOWNLOAD_FOLDER = "downloads"
@@ -19,7 +18,6 @@ def clean_filename(s):
 def index():
     return render_template('index.html')
 
-
 @app.route('/terminos-y-privacidad')
 def terminos():
     return render_template('terminosyprivacidad.html')
@@ -32,7 +30,7 @@ def download():
     try:
         ydl_opts = {
             'quiet': True,
-            'outtmpl': os.path.join(DOWNLOAD_FOLDER, '%(title)s.%(ext)s'),  # Guardar con título original
+            'outtmpl': os.path.join(DOWNLOAD_FOLDER, '%(title)s.%(ext)s'),
             'no_warnings': True,
         }
 
@@ -49,13 +47,14 @@ def download():
                 'keepvideo': False,
             })
             ext = 'mp3'
-
         elif format == 'mp4':
             ydl_opts.update({
                 'format': 'bestvideo+bestaudio/best',
                 'merge_output_format': 'mp4',
             })
             ext = 'mp4'
+        else:
+            return "<h2>Formato no válido</h2>"
 
         with yt_dlp.YoutubeDL(ydl_opts) as ydl:
             info_dict = ydl.extract_info(url, download=True)
@@ -63,11 +62,14 @@ def download():
             clean_title = clean_filename(title)
             file_path = os.path.join(DOWNLOAD_FOLDER, f"{clean_title}.{ext}")
 
-        # Enviar archivo para descarga
-        response = send_file(file_path, as_attachment=True)
+        # Verifica si el archivo existe
+        if not os.path.exists(file_path):
+            return "<h2>Error: El archivo no fue generado correctamente.</h2>"
 
-        # Opcional: eliminar archivo después de enviar (para no llenar espacio)
-        # IMPORTANTE: Esto funciona solo si no se usa modo debug en Flask y el servidor sirve bien el archivo antes de eliminar
+        # Descargar el archivo con nombre correcto
+        response = send_file(file_path, as_attachment=True, download_name=f"{clean_title}.{ext}")
+
+        # Eliminar el archivo después de enviar
         @response.call_on_close
         def cleanup():
             try:
