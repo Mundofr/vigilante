@@ -1,0 +1,114 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <title>Descargar Música</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <link rel="stylesheet" href="/static/styles.css">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&display=swap" rel="stylesheet">
+
+</head>
+<body>
+
+  <!-- MENÚ -->
+  <header class="header">
+    <div class="navbar">
+      <div class="logo">
+        <img src="/static/logo-music-jdk-2026.png" alt="Logo Music JDK">
+      </div>
+      <div class="menu-toggle" id="menu-toggle">☰</div>
+      <nav>
+        <ul class="nav-links" id="menu">
+          <li><a href="#">Inicio</a></li>
+         
+          <li><a href="#">Contacto</a></li>
+        </ul>
+      </nav>
+    </div>
+  </header>
+
+  <!-- CONTENIDO PRINCIPAL -->
+  <main class="container">
+    <h1>Descarga Música o Video</h1>
+    <p class="subtext">Convierte tus enlaces de YouTube en MP3 o MP4 fácilmente</p>
+
+    <form id="downloadForm" class="download-form">
+      <input type="text" name="url" placeholder="Pega el enlace de YouTube" required autocomplete="off">
+      <select name="format">
+        <option value="mp3">MP3 (audio)</option>
+        <option value="mp4">MP4 (video)</option>
+      </select>
+      <button type="submit">Descargar</button>
+    </form>
+
+    <div id="loader" class="loader hidden">⏳Espere mientras se descarga...</div>
+    <div id="message" class="message"></div>
+  </main>
+
+  <!-- PIE DE PÁGINA -->
+  <footer class="footer">
+    <div class="footer-content">
+      <p>&copy; 2025 Music JDK. Todos los derechos reservados.</p>
+     <a href="{{ url_for('terminos') }}" class="footer-link">Términos y Condiciones</a>
+
+    </div>
+  </footer>
+
+  <script>
+    const toggle = document.getElementById('menu-toggle');
+    const menu = document.getElementById('menu');
+    toggle.addEventListener('click', () => {
+      menu.classList.toggle('active');
+    });
+
+    const form = document.getElementById('downloadForm');
+    const loader = document.getElementById('loader');
+    const message = document.getElementById('message');
+
+    form.addEventListener('submit', async (e) => {
+      e.preventDefault();
+      loader.classList.remove('hidden');
+      message.textContent = '';
+
+      const formData = new FormData(form);
+      const response = await fetch('/download', {
+        method: 'POST',
+        body: formData
+      });
+if (response.ok) {
+  const blob = await response.blob();
+  const disposition = response.headers.get('Content-Disposition');
+  const filenameMatch = disposition && disposition.match(/filename="(.+)"/);
+  const filename = filenameMatch ? filenameMatch[1] : 'descarga.mp3';
+
+  const url = window.URL.createObjectURL(blob);
+  const a = document.createElement('a');
+  a.href = url;
+  a.download = filename;
+  a.click();
+  window.URL.revokeObjectURL(url);
+
+  loader.classList.add('hidden');
+  message.innerHTML = `✅ <strong>${filename}</strong> descargado con éxito. Revisa tu carpeta de descargas.<br>🔄 La página se recargará en <span id="countdown">5</span> segundos...`;
+
+  // Temporizador para recargar
+  let seconds = 5;
+  const countdownEl = document.getElementById('countdown');
+  const interval = setInterval(() => {
+    seconds--;
+    countdownEl.textContent = seconds;
+    if (seconds === 0) {
+      clearInterval(interval);
+      location.reload(); // Recarga la página
+    }
+  }, 1000);
+} else {
+  loader.classList.add('hidden');
+  message.textContent = "❌ Ocurrió un error durante la descarga.";
+}
+
+        });
+  </script>
+</body>
+</html>
