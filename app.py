@@ -2,6 +2,7 @@ from flask import Flask, render_template, request, send_file
 import yt_dlp
 import os
 import re
+os.environ["PATH"] += os.pathsep + os.path.expanduser("~/.local/bin")
 
 app = Flask(__name__)
 DOWNLOAD_FOLDER = "downloads"
