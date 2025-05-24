@@ -1,8 +1,11 @@
 services:
   - type: web
-    name: music-jdk
+    name: music-downloader
     env: python
+    region: oregon  # o puedes usar frankfurt si estás en Europa
     plan: free
-    buildCommand: "pip install -r requirements.txt"
-    startCommand: "gunicorn app:app"
-    region: oregon
+    buildCommand: pip install -r requirements.txt
+    startCommand: gunicorn app:app
+    envVars:
+      - key: PYTHON_VERSION
+        value: 3.11
